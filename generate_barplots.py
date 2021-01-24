@@ -6,7 +6,7 @@ import pandas as pd
 
 SHOW_PLOT = False
 DAS_PATH = "/var/scratch/lvs215/processed-surf-dataset/"
-SAVEFIG_PATH= "/home/cmt2002/rack-barplots/"
+SAVEFIG_PATH= "/home/cmt2002/surf-rack-plots/"
 FIGNAME = "rack_barplots"
 
 def get_rack_nodes(df):
@@ -36,52 +36,86 @@ def load1_rack_barplot(ax, df_covid, df_non_covid, subtitle):
     rack_nodes = get_rack_nodes(df_covid)  # Get the rack nodes
     index = 0
     w = 0.4
+    bar_locs = []
+    std_data = []
+    bar_heights = []
     for rack, columns in rack_nodes.items():
         arr_covid = get_custom_values(df_covid[list(columns)])
         arr_non_covid = get_custom_values(df_non_covid[list(columns)])
-
-        ax.bar(x=index - w / 2, height=arr_covid.mean(), width=w, yerr=arr_covid.std(), color="lightcoral",
-                     capsize=4)
-        ax.bar(x=index + w / 2, height=arr_non_covid.mean(), width=w, yerr=arr_non_covid.std(), color="steelblue",
-                     capsize=4)
+        
+        bar_locs.extend([index - w / 2, index + w / 2])
+        bar_heights.extend([arr_covid.mean(), arr_non_covid.mean()])
+        std_data.extend([arr_covid.std(), arr_non_covid.std()])
+    
         if arr_covid.std() > 75:
-            ax.text(x=index - (w / 2 + 0.2), y=77.5, s=str(round(arr_covid.std(), 1)), fontsize=14, color="black",
+            ax.text(x=index - (w / 2 + 0.23), y=78, s=str(round(arr_covid.std(), 1)), fontsize=14, color="black",
                     va="center")
         if arr_non_covid.std() > 75:
-            ax.text(x=index + (w / 2 - 0.2), y=77.5, s=str(round(arr_non_covid.std(), 1)), fontsize=14, color="black",
+            ax.text(x=index + (w / 2 - 0.23), y=78, s=str(round(arr_non_covid.std(), 1)), fontsize=14, color="black",
                     va="center")
 
         index += 1
 
+    ax.bar(x=bar_locs,
+           height=bar_heights,
+           width=w,
+           align='center',
+           yerr=[np.zeros(len(std_data)), std_data],
+           color=["lightcoral", "steelblue"] * int(len(bar_heights) / 2),
+           edgecolor='black',
+           capsize=4)
+
     ax.tick_params(axis='both', which='major', labelsize=16)
     ax.tick_params(axis='both', which='minor', labelsize=16)
-    ax.set_ylabel("Load1", fontsize=14)
+    ax.set_ylabel("Load1", fontsize=16)
     ax.set_ylim(0, 75)
-    ax.set_xlabel(subtitle, fontsize=16)
+    ax.set_xlabel(subtitle, fontsize=18)
     ax.set_xticks(np.arange(len(rack_nodes.keys())))
-    ax.set_xticklabels(rack_nodes.keys(), fontsize=16)
+    ax.set_xticklabels(rack_nodes.keys(), fontsize=18)
+    ax.yaxis.set_label_coords(-0.08, 0.5)
 
 def rack_barplot(ax, df_covid, df_non_covid, subtitle, ylabel):
     rack_nodes = get_rack_nodes(df_covid)  # Get the rack nodes
     index = 0
     w = 0.4
+    bar_locs = []
+    std_data = []
+    bar_heights = []
     for rack, columns in rack_nodes.items():
         arr_covid = get_custom_values(df_covid[list(columns)])
         arr_non_covid = get_custom_values(df_non_covid[list(columns)])
-
-        ax.bar(x=index - w / 2, height=arr_covid.mean(), width=w, yerr=arr_covid.std(), color="lightcoral",
-                     capsize=4)
-        ax.bar(x=index + w / 2, height=arr_non_covid.mean(), width=w, yerr=arr_non_covid.std(), color="steelblue",
-                     capsize=4)
+        
+        bar_locs.extend([index - w / 2, index + w / 2])
+        bar_heights.extend([arr_covid.mean(), arr_non_covid.mean()])
+        std_data.extend([arr_covid.std(), arr_non_covid.std()])
+        
         index += 1
-
+        
+    ax.bar(x=bar_locs, 
+           height=bar_heights, 
+           width=w, 
+           align='center',
+           yerr=[np.zeros(len(std_data)), std_data], 
+           color=["lightcoral", "steelblue"] * int(len(bar_heights) / 2),
+           edgecolor='black',
+           capsize=4)
+        
+        
     ax.tick_params(axis='both', which='major', labelsize=16)
     ax.tick_params(axis='both', which='minor', labelsize=16)
-    ax.set_ylabel(ylabel, fontsize=14)
+    ax.set_ylabel(ylabel, fontsize=16)
     ax.set_ylim(0, )
-    ax.set_xlabel(subtitle, fontsize=16)
+    ax.set_xlabel(subtitle, fontsize=18)
     ax.set_xticks(np.arange(len(rack_nodes.keys())))
-    ax.set_xticklabels(rack_nodes.keys(), fontsize=16)
+    ax.set_xticklabels(rack_nodes.keys(), fontsize=18)
+
+    if ylabel == "RAM\nUtilization [%]":
+        ax.yaxis.set_label_coords(-0.08, 0.65)
+    if ylabel == "Power\nConsumption [W]":
+        ax.yaxis.set_label_coords(-0.08, 0.49)
+    if ylabel == "Temperature [C]":
+        ax.yaxis.set_label_coords(-0.08, 0.4)
+
 
 def rack_analysis_barplot(df_dic, ax, ylabel):
     rack_barplot(
@@ -118,11 +152,11 @@ df_power_covid, df_power_non_covid = covid_non_covid(pd.read_parquet(DAS_PATH + 
 df_temp_covid, df_temp_non_covid = covid_non_covid(pd.read_parquet(DAS_PATH + "surfsara_ambient_temp"))
 
 
-_, (ax_power, ax_load, ax_temp, ax_ram) = plt.subplots(4, 1, figsize=(11, 8), constrained_layout=True, sharex=True)
+_, (ax_ram, ax_power, ax_temp, ax_load) = plt.subplots(4, 1, figsize=(11, 8), constrained_layout=True, sharex=True)
 rack_analysis_barplot(
     df_dic={"covid": df_power_covid, "non_covid": df_power_non_covid},
     ax=ax_power,
-    ylabel="Power consumption [W]")
+    ylabel="Power\nConsumption [W]")
 rack_analysis_barplot(
     df_dic={"covid": df_temp_covid, "non_covid": df_temp_non_covid},
     ax=ax_temp,
@@ -133,14 +167,15 @@ load_rack_analysis_barplot(
 rack_analysis_barplot(
     df_dic={"covid": df_ram_covid, "non_covid": df_ram_non_covid},
     ax=ax_ram,
-    ylabel="RAM utilization [%]")
+    ylabel="RAM\nUtilization [%]")
 
-ax_ram.set_xlabel("Racks")
-
+ax_load.set_xlabel("Racks")
+ax_load.text(x=3.5, y=60, s="Generic nodes", fontsize=16)
+ax_load.text(x=11.5, y=60, s="ML nodes", fontsize=16)
 # Depict legend on top of the first plot
 lightcoral_patch = mpatches.Patch(color='lightcoral', label='covid (left)')
 steelblue_patch = mpatches.Patch(color='steelblue', label='non-covid (right)')
-ax_power.legend(handles=[lightcoral_patch, steelblue_patch], loc="center", bbox_to_anchor=(0.5, 1.13), fontsize=14,
+ax_ram.legend(handles=[lightcoral_patch, steelblue_patch], loc="center", bbox_to_anchor=(0.5, 1.15), fontsize=16,
           ncol=2)
 
 plt.savefig((SAVEFIG_PATH + FIGNAME + ".pdf"), dpi=100)
