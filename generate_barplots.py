@@ -72,7 +72,7 @@ def load1_rack_barplot(ax, df_covid, df_non_covid, subtitle):
     ax.set_xlabel(subtitle, fontsize=18)
     ax.set_xticks(np.arange(len(rack_nodes.keys())))
     ax.set_xticklabels(rack_nodes.keys(), fontsize=18)
-    ax.yaxis.set_label_coords(-0.08, 0.5)
+    ax.yaxis.set_label_coords(-0.06, 0.5)
 
 def rack_barplot(ax, df_covid, df_non_covid, subtitle, ylabel):
     rack_nodes = get_rack_nodes(df_covid)  # Get the rack nodes
@@ -110,11 +110,11 @@ def rack_barplot(ax, df_covid, df_non_covid, subtitle, ylabel):
     ax.set_xticklabels(rack_nodes.keys(), fontsize=18)
 
     if ylabel == "RAM\nUtilization [%]":
-        ax.yaxis.set_label_coords(-0.08, 0.65)
+        ax.yaxis.set_label_coords(-0.06, 0.67)
     if ylabel == "Power\nConsumption [W]":
-        ax.yaxis.set_label_coords(-0.08, 0.49)
+        ax.yaxis.set_label_coords(-0.06, 0.56)
     if ylabel == "Temperature [C]":
-        ax.yaxis.set_label_coords(-0.08, 0.4)
+        ax.yaxis.set_label_coords(-0.06, 0.36)
 
 
 def rack_analysis_barplot(df_dic, ax, ylabel):
@@ -170,8 +170,8 @@ rack_analysis_barplot(
     ylabel="RAM\nUtilization [%]")
 
 ax_load.set_xlabel("Racks")
-ax_load.text(x=3.5, y=60, s="Generic nodes", fontsize=16)
-ax_load.text(x=11.5, y=60, s="ML nodes", fontsize=16)
+ax_load.text(x=2.5, y=65, s="Generic nodes", fontsize=16)
+ax_load.text(x=11.5, y=65, s="ML nodes", fontsize=16)
 # Depict legend on top of the first plot
 lightcoral_patch = mpatches.Patch(color='lightcoral', label='covid (left)')
 steelblue_patch = mpatches.Patch(color='steelblue', label='non-covid (right)')

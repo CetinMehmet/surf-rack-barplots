@@ -7,4 +7,4 @@
 #SBATCH -e slurm-%j.err                                                         
 #SBATCH -o slurm-%j.out                                                         
 
-python3 /home/cmt2002/surf-rack-plots/generate_barplots.py
+python3 /home/cmt2002/surf-rack-plots/generate_boxplots.py

@@ -6,8 +6,8 @@ import seaborn as sns
 
 SHOW_PLOT = False
 DAS_PATH = "/var/scratch/lvs215/processed-surf-dataset/"
-SAVEFIG_PATH= "/home/cmt2002/rack-barplots/"
-FIGNAME = "rack_violinplots"
+SAVEFIG_PATH= "/home/cmt2002/surf-rack-plots/"
+FIGNAME = "rack_boxplots"
 
 def get_rack_nodes(df):
     rack_nodes = {}
@@ -33,11 +33,11 @@ def get_custom_values(df):
     return values
 
 
-def rack_violinplot(ax, df_covid, df_non_covid, subtitle, ylabel):
-    rack_nodes = get_rack_nodes(df_covid) # To get the rack nodes
+def rack_violinplot(ax, df_covid, df_non_covid, ylabel):
+    rack_nodes = get_rack_nodes(df_non_covid) # To get the rack nodes
     rack_values = list()
     rack_names = list()
-    violin_width = 0.8
+    box_width = 0.65
     
     for rack, columns in rack_nodes.items():
         arr_covid = get_custom_values(df_covid[list(columns)])
@@ -46,39 +46,42 @@ def rack_violinplot(ax, df_covid, df_non_covid, subtitle, ylabel):
         rack_values.append(arr_non_covid)
         rack_names.append(rack)
         
-    sns.violinplot(data=rack_values, ax=ax, cut=0, width=violin_width, palette=['lightcoral', 'steelblue'] * (int(len(rack_values)/2)))
+    sns.boxplot(data=rack_values, ax=ax, fliersize=3, width=box_width, palette=['lightcoral', 'steelblue'] * (int(len(rack_values)/2)))
     ax.set_ylabel(ylabel,fontsize=14)
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax.tick_params(axis='both', which='minor', labelsize=14)
     ax.set_xticks([i + 0.5 for i in range(0, len(rack_values), 2)])
-    ax.set_xlabel(subtitle, fontsize=14)
 
     # For load1, depict the values that exceed 100 load
-    if ylabel == "Load1":
-        ax.set_ylim(0, 100)
-        for index, val in enumerate(rack_values):
-            max_val = np.amax(val)
-            if max_val > 100:
-                ax.text(x=index-0.2, y=102.2, s=str(int(max_val)), fontsize=22, color="black", va="center")
+    #if ylabel == "Load1":
+        #ax.set_ylim(0, 10000)
+        #for index, val in enumerate(rack_values):
+            #max_val = np.amax(val)
+            #if max_val > 10000:
+                #ax.text(x=index-0.2, y=10010, s=str(round(max_val, 1)), fontsize=12, color="black", va="center")
 
+    #else:
+    ax.set_ylim(0, )
+    
+    if ylabel == "RAM Utilization [%]":
+        ax.yaxis.set_label_coords(-0.075, 0.6)
     else:
-        ax.set_ylim(0, )
-
+        ax.yaxis.set_label_coords(-0.075, 0.5)
+    
+    ax.axvline(x=19.5, c="green", lw=2)
     ax.set_xticklabels(
         rack_names,
         ha='center', fontsize=16
     )
     for i in range(0, len(rack_values), 2):
-        ax.axvline(i + 1.5, lw=2, ls='dashed')
+        ax.axvline(i + 1.5, lw=1, ls='dashed')
 
 def rack_analysis_violinplot(df_dic, ax, ylabel):
     rack_violinplot(
         ax=ax,
         df_covid=df_dic["covid"],
         df_non_covid=df_dic["non_covid"],
-        subtitle=None,
         ylabel=ylabel)
-    ax.axvline(x=9.5, c="green", lw=1.5)
 
 def covid_non_covid(df):
     if df.index.dtype == "int64":
@@ -98,32 +101,36 @@ df_power_covid, df_power_non_covid = covid_non_covid(pd.read_parquet(DAS_PATH + 
 df_temp_covid, df_temp_non_covid = covid_non_covid(pd.read_parquet(DAS_PATH + "surfsara_ambient_temp"))
 
 
-_, (ax_power, ax_load, ax_temp, ax_ram) = plt.subplots(4, 1, figsize=(11, 8), constrained_layout=True, sharex=True)
+_, (ax_ram, ax_power, ax_temp, ax_load) = plt.subplots(4, 1, figsize=(11, 9), constrained_layout=True, sharex=True)
 rack_analysis_violinplot(
     df_dic={"covid": df_power_covid, "non_covid": df_power_non_covid},
     ax=ax_power,
-    ylabel="Power consumption [W]")
+    ylabel="Power Consumption [W]")
+
 rack_analysis_violinplot(
     df_dic={"covid": df_temp_covid, "non_covid": df_temp_non_covid},
     ax=ax_temp,
     ylabel="Temperature [C]")
+
 rack_analysis_violinplot(
     df_dic={"covid": df_load_covid, "non_covid": df_load_non_covid},
-    ax=ax_load)
+    ax=ax_load,
+    ylabel="Load1")
+
 rack_analysis_violinplot(
     df_dic={"covid": df_ram_covid, "non_covid": df_ram_non_covid},
     ax=ax_ram,
-    ylabel="RAM utilization [%]")
+    ylabel="RAM Utilization [%]")
 
-ax_ram.set_xlabel("Racks")
+ax_load.set_xlabel("Racks", fontsize=16)
 
 # Depict legend on top of the first plot
 lightcoral_patch = mpatches.Patch(color='lightcoral', label='covid (left)')
 steelblue_patch = mpatches.Patch(color='steelblue', label='non-covid (right)')
-ax_power.legend(handles=[lightcoral_patch, steelblue_patch], loc="center", bbox_to_anchor=(0.5, 1.13), fontsize=14,
+ax_ram.legend(handles=[lightcoral_patch, steelblue_patch], loc="center", bbox_to_anchor=(0.5, 1.1), fontsize=14,
           ncol=2)
 
-plt.savefig((SAVEFIG_PATH + FIGNAME + ".pdf"), dpi=100)
+plt.savefig((SAVEFIG_PATH + FIGNAME + ".png"), dpi=200)
 if SHOW_PLOT:
     plt.show()
 plt.pause(0.0001)
